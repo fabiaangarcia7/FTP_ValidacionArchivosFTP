@@ -50,30 +50,70 @@ namespace FTP_ValidacionArchivosFTP
             {
                 using (Session session = new Session())
                 {
+
                     // Connect
                     session.Open(sessionOp);
 
-                    // Upload files
-                    TransferOptions transferOptions = new TransferOptions();
-                    transferOptions.TransferMode = TransferMode.Binary;
+                    string stamp = DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+                    string fileName = "Prueba" + stamp + ".txt";
+                    string remotePath = "/FTP/" + fileName;
+                    string localPath = @"C:\Users\fabian.garcia.SA\Documents\Subir Archivos\" + fileName;
 
-                    TransferOperationResult transferResult;
-                    transferResult =
-                    session.PutFiles(@"C:\Users\fabian.garcia.SA\Documents\Subir Archivos\*", "/FTP/", false, transferOptions);
+                    // Manual "remote to local" synchronization.
 
-                    // Throw on any error
-                    transferResult.Check();
-
-                    // Print results
-                    foreach (TransferEventArgs transfer in transferResult.Transfers)
+                    // You can achieve the same using:
+                    // session.SynchronizeDirectories(
+                    //     SynchronizationMode.Local, localPath, remotePath, false, false,
+                    //     SynchronizationCriteria.Time,
+                    //     new TransferOptions { FileMask = fileName }).Check();
+                    if (session.FileExists(remotePath))
                     {
-                        Console.WriteLine("Upload of {0} succeeded", transfer.FileName);
+                        bool download;
+                        if (!File.Exists(localPath))
+                        {
+                            Console.WriteLine(
+                                "File {0} exists, local backup {1} does not",
+                                remotePath, localPath);
+                            download = true;
+                        }
+                        else
+                        {
+                            DateTime remoteWriteTime =
+                                session.GetFileInfo(remotePath).LastWriteTime;
+                            DateTime localWriteTime = File.GetLastWriteTime(localPath);
+
+                            if (remoteWriteTime > localWriteTime)
+                            {
+                                Console.WriteLine(
+                                    "File {0} as well as local backup {1} exist, " +
+                                    "but remote file is newer ({2}) than local backup ({3})",
+                                    remotePath, localPath, remoteWriteTime, localWriteTime);
+                                download = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine(
+                                    "File {0} as well as local backup {1} exist, " +
+                                    "but remote file is not newer ({2}) than local backup ({3})",
+                                    remotePath, localPath, remoteWriteTime, localWriteTime);
+                                download = false;
+                            }
+                        }
+
+                        if (download)
+                        {
+                            // Download the file and throw on any error
+                            session.GetFiles(remotePath, localPath).Check();
+
+                            Console.WriteLine("Download to backup done.");
+                        }
                     }
-
-                    DateTime remoteWriteTime = session.GetFileInfo("/FTP/Prueba.txt").LastWriteTime;
-                    DateTime localWriteTime = File.GetLastWriteTime(@"C:\Users\fabian.garcia.SA\Documents\Subir Archivos\Prueba.txt");
-
+                    else
+                    {
+                        Console.WriteLine("File {0} does not exist yet", remotePath);
+                    }
                 }
+               
             }
             catch(Exception)
             {
