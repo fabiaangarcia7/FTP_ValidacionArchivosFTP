@@ -55,7 +55,8 @@ namespace FTP_ValidacionArchivosFTP
                     session.Open(sessionOp);
 
                     string stamp = DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
-                    string fileName = "Prueba" + stamp + ".txt";
+                    string fileName = txtArchivo.Text;
+                    fileName = "Prueba.txt";
                     string remotePath = "/FTP/" + fileName;
                     string localPath = @"C:\Users\fabian.garcia.SA\Documents\Subir Archivos\" + fileName;
 
@@ -68,12 +69,11 @@ namespace FTP_ValidacionArchivosFTP
                     //     new TransferOptions { FileMask = fileName }).Check();
                     if (session.FileExists(remotePath))
                     {
+                        
                         bool download;
                         if (!File.Exists(localPath))
                         {
-                            Console.WriteLine(
-                                "File {0} exists, local backup {1} does not",
-                                remotePath, localPath);
+                            MessageBox.Show("No existe el archivo en la direccion local. Se descargará el archivo desde el servidor");
                             download = true;
                         }
                         else
@@ -84,18 +84,15 @@ namespace FTP_ValidacionArchivosFTP
 
                             if (remoteWriteTime > localWriteTime)
                             {
-                                Console.WriteLine(
-                                    "File {0} as well as local backup {1} exist, " +
-                                    "but remote file is newer ({2}) than local backup ({3})",
-                                    remotePath, localPath, remoteWriteTime, localWriteTime);
+                                MessageBox.Show("El archivo" + remotePath.ToString() + " existe en el directorio local, " +
+                                    "pero la versión del servidor es más reciente " + remoteWriteTime.ToString() + ". Se descargara el archivo desde el servidor");
                                 download = true;
                             }
                             else
                             {
-                                Console.WriteLine(
-                                    "File {0} as well as local backup {1} exist, " +
-                                    "but remote file is not newer ({2}) than local backup ({3})",
-                                    remotePath, localPath, remoteWriteTime, localWriteTime);
+
+                                MessageBox.Show("El archivo" + remotePath.ToString() + " existe en el directorio local, " +
+                                   "pero la versión del servidor es más antigua " + remoteWriteTime.ToString() + ".");
                                 download = false;
                             }
                         }
@@ -105,11 +102,12 @@ namespace FTP_ValidacionArchivosFTP
                             // Download the file and throw on any error
                             session.GetFiles(remotePath, localPath).Check();
 
-                            Console.WriteLine("Download to backup done.");
+                            MessageBox.Show("Se ha descargado el archivo en la siguiente ubicación " +localPath.ToString()+".");
                         }
                     }
                     else
                     {
+                        MessageBox.Show("El archivo no existe en la ubicación remota " + remotePath.ToString() + ".");
                         Console.WriteLine("File {0} does not exist yet", remotePath);
                     }
                 }
