@@ -31,11 +31,9 @@ namespace FTP_ValidacionArchivosFTP
 
             try
             {
-                opnFileDialog.Title = "Selecciona la ruta";
-                opnFileDialog.ShowDialog();
-                string Texto = opnFileDialog.FileName;
-
-                txtRuta.Text = Texto;
+                FolderBrowserDialog carpeta = new FolderBrowserDialog();
+                DialogResult respuesta = carpeta.ShowDialog();
+                txtRuta.Text = carpeta.SelectedPath;
             }
             catch(Exception)
             {
